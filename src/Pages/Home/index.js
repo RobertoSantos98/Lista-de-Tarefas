@@ -2,6 +2,8 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, TextInput, FlatList } 
 import Colors from '../../Components/Colors';
 import { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function Home() {
     const [modal, setModal] = useState(true);
@@ -10,7 +12,7 @@ export default function Home() {
     const [descricaoTarefa, setDescricaoTarefa] = useState('');
     const [tarefas, setTarefas] = useState([]);
 
-    const adicionarTarefa = () => {
+    const adicionarTarefa = async () => {
         if (nomeTarefa.trim() === '' || descricaoTarefa.trim() === '') {
             alert('Por favor, preencha todos os campos!');
             return;
@@ -23,14 +25,31 @@ export default function Home() {
         };
 
         setTarefas([...tarefas, novaTarefa]);
+
+        try {
+            const jsonValue = JSON.stringify(novaTarefa)
+            await AsyncStorage.setItem(novaTarefa.id, jsonValue);
+            console.log("Objeto Salvo com sucesso.")
+        } catch (error) {
+            console.log("Erro ao salvar: " + error);
+        }
+
         setNomeTarefa('');
         setDescricaoTarefa('');
         setModal(false);
         setVazio(false);
+        
     };
 
-    const removerTarefa = (id) => {
+    const removerTarefa = async (id) => {
         setTarefas(tarefas.filter((tarefa) => tarefa.id !== id));
+
+        try {
+            await AsyncStorage.removeItem(id);
+            console.log("Tarefa Removida.");
+        } catch (error) {
+            console.log("Erro ao remover tarefa: " + error);
+        }
     };    
 
     return (
@@ -56,7 +75,7 @@ export default function Home() {
                         
                         <TouchableOpacity
                             onPress={() => removerTarefa(item.id)}
-                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            style={{}}
                         >
                             <Icon name="delete" size={24} color="#900" />
                         </TouchableOpacity>
@@ -66,7 +85,7 @@ export default function Home() {
             
             
             <TouchableOpacity onPress={() => setModal(true)} style={[styles.button, { marginVertical: 16 }]}>
-                <Text style={{ fontSize: 18, color: Colors.white }}>Adicionar Tarefa</Text>
+                <Text style={{ fontSize: 18, color: Colors.white }}> Adicionar Tarefa </Text>
             </TouchableOpacity>
         </View>
     )}
@@ -171,8 +190,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 5,
-        flexDirection: 'column', 
-        position: 'relative',
+        flexDirection: 'row',
+        alignItems: 'center'
+        
     },
     tarefaInfo: {
         flex: 1,
